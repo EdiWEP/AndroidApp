@@ -3,6 +3,7 @@ package com.example.todo
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
+import androidx.appcompat.widget.SearchView
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
@@ -12,14 +13,19 @@ import androidx.navigation.ui.setupWithNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.todo.databinding.ActivityMainBinding
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var recyclerView : RecyclerView
-    private lateinit var todoAdapter: TodoAdapter
-    private lateinit var todos : MutableList<Todo>
     private lateinit var btnAddTodo: Button
+    private lateinit var searchView: SearchView
+
+    private lateinit var todoAdapter: TodoAdapter
+
+    private lateinit var todos: MutableList<Todo>
+    private lateinit var displayedTodos: MutableList<Todo>
 
     private fun setupNavBar(binding: ActivityMainBinding) {
         val navView: BottomNavigationView = binding.navView
@@ -49,13 +55,47 @@ class MainActivity : AppCompatActivity() {
         return todos
     }
 
-    private fun initializeRecyclerView(todos: MutableList<Todo>) {
+    private fun initializeRecyclerView(todos: MutableList<Todo>) : RecyclerView{
         recyclerView = findViewById(R.id.recyclerviewTodo)
         todoAdapter = TodoAdapter(todos, this)
         recyclerView.adapter = todoAdapter
         recyclerView.layoutManager = LinearLayoutManager(this)
+
+        return recyclerView
     }
 
+    private fun initializeSearchView(recyclerView: RecyclerView) {
+        searchView = findViewById(R.id.searchView)
+        searchView.clearFocus()
+
+        searchView.setOnQueryTextListener(object: SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(p0: String?): Boolean {
+                return false
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+
+                val searchText = newText!!.lowercase(Locale.getDefault())
+                displayedTodos.clear()
+
+                if (searchText.isNotEmpty()) {
+
+                    displayedTodos.addAll(
+                        todos.filter {
+                            todo -> todo.title.contains(searchText, ignoreCase = true)
+                        }
+                    )
+
+                }
+                else {
+                    displayedTodos.addAll(todos)
+                }
+
+                recyclerView.adapter!!.notifyDataSetChanged()
+                return false
+            }
+        })
+    }
 
     private fun setEventListeners() {
         btnAddTodo = findViewById(R.id.btnAddTodo)
@@ -66,7 +106,12 @@ class MainActivity : AppCompatActivity() {
                 val todo = Todo(todoTitle, "default description")
                 todoAdapter.addTodo(todo)
                 editText.text.clear()
+
+                // TODO: change with better persistence method
+                todos.add(todo)
             }
+
+
         }
     }
 
@@ -79,8 +124,13 @@ class MainActivity : AppCompatActivity() {
         setupNavBar(binding)
 
         todos = getMockTodos()
+        displayedTodos = mutableListOf<Todo>()
+        displayedTodos.addAll(todos)
 
-        initializeRecyclerView(todos)
+        recyclerView = initializeRecyclerView(displayedTodos)
+
+        initializeSearchView(recyclerView)
+
         setEventListeners()
     }
 }
