@@ -60,4 +60,20 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
+    <Button
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
+        android:textColor="@color/black"
+        app:cornerRadius="3dp"
+        app:strokeColor="@color/black"
+        app:icon="@drawable/googlelogo"
+        app:iconSize="20dp"
+        app:iconGravity="start"
+        app:iconTint="@color/black"
+        android:textAlignment="center"
+        android:id="@+id/btnGoogleLogin"
+        android:text="@string/login_with_google"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="bottom|center" />
+
 </LinearLayout>
