@@ -6,23 +6,30 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.EditText
 import androidx.appcompat.widget.SearchView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.todo.R
 import com.example.todo.Todo
 import com.example.todo.TodoAdapter
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.*
 import java.util.*
 
 
 class TodoList : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
+    private lateinit var btnAddTodo: Button
     private lateinit var todoAdapter: TodoAdapter
     private lateinit var searchView: SearchView
 
     private lateinit var todos: MutableList<Todo>
+    private lateinit var todoIds: MutableList<String>
     private lateinit var displayedTodos: MutableList<Todo>
+    private lateinit var db: FirebaseDatabase
+    private lateinit var dbref: DatabaseReference
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,13 +43,18 @@ class TodoList : Fragment() {
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_todo_list, container, false)
 
-        todos = getMockTodos()
+        db = FirebaseDatabase.getInstance("https://todolistapp-f8ef0-default-rtdb.europe-west1.firebasedatabase.app/")
+        dbref = db.getReference("users")
+
+        todos = mutableListOf<Todo>()
+        todoIds = mutableListOf<String>()
         displayedTodos = mutableListOf<Todo>()
-        displayedTodos.addAll(todos)
+        getTodos()
 
         recyclerView = initializeRecyclerView(view, displayedTodos)
 
         initializeSearchView(view, recyclerView)
+        setEventListeners(view)
 
         return view
     }
@@ -50,7 +62,7 @@ class TodoList : Fragment() {
 
     private fun initializeRecyclerView(view: View, todos: MutableList<Todo>) : RecyclerView {
         recyclerView = view.findViewById(R.id.recyclerviewTodo)
-        todoAdapter = TodoAdapter(todos, view.context)
+        todoAdapter = TodoAdapter(todos, todoIds, view.context)
         recyclerView.adapter = todoAdapter
         recyclerView.layoutManager = LinearLayoutManager(view.context)
 
@@ -74,7 +86,7 @@ class TodoList : Fragment() {
                 if (searchText.isNotEmpty()) {
                     displayedTodos.addAll(
                         todos.filter {
-                                todo -> todo.title.contains(searchText, ignoreCase = true)
+                                todo -> todo.title!!.contains(searchText, ignoreCase = true)
                         }
                     )
                 }
@@ -88,17 +100,54 @@ class TodoList : Fragment() {
         })
     }
 
-    private fun getMockTodos() : MutableList<Todo> {
-        todos = mutableListOf<Todo>()
-        todos.addAll(
-            listOf(
-                Todo("Task 1", "task"),
-                Todo("Task 2", "task"),
-                Todo("Task 3", "task")
-            )
-        )
-
-        return todos
+    private fun setEventListeners(view: View) {
+        btnAddTodo = view.findViewById(R.id.btnAddTodo)
+        btnAddTodo.setOnClickListener {
+            val editText : EditText = view.findViewById<EditText>(R.id.editTextTodoTitle)
+            val todoTitle = editText.text.toString()
+            if (todoTitle.isNotEmpty()) {
+                addTodo(todoTitle)
+                editText.text.clear()
+            }
+        }
     }
+
+    private fun addTodo(title: String) {
+        // TODO: move this to different fragment
+        val uid = FirebaseAuth.getInstance().currentUser!!.uid
+        val todo = Todo(title)
+        val key = dbref.child(uid).push().key!!
+
+        var map = hashMapOf<String, Any>()
+        map[key] = todo
+        dbref.child(uid).updateChildren(map)
+    }
+
+    private fun getTodos() {
+
+        val uid = FirebaseAuth.getInstance().currentUser!!.uid
+        dbref.child(uid).addValueEventListener(object: ValueEventListener{
+            override fun onDataChange(snapshot: DataSnapshot) {
+                todos.clear()
+                if (snapshot.exists()) {
+                    for (todoSnapshot in snapshot.children) {
+                        val todo = todoSnapshot.getValue(Todo::class.java)
+                        todos.add(todo!!)
+                        todoIds.add(todoSnapshot.key!!)
+                    }
+                    displayedTodos.clear()
+                    displayedTodos.addAll(todos)
+                    todoAdapter.notifyDataSetChanged()
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                TODO("Not yet implemented")
+            }
+
+        })
+
+    }
+
 
 }

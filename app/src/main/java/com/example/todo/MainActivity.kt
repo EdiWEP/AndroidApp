@@ -2,7 +2,6 @@ package com.example.todo
 
 import android.os.Bundle
 import android.widget.Button
-import android.widget.EditText
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
@@ -15,9 +14,6 @@ import java.util.*
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    private lateinit var btnAddTodo: Button
-    private lateinit var todoAdapter: TodoAdapter
-    private lateinit var todos: MutableList<Todo>
 
     private fun setupNavBar(binding: ActivityMainBinding) {
         val navView: BottomNavigationView = binding.navView
@@ -32,25 +28,6 @@ class MainActivity : AppCompatActivity() {
                 else -> {}
             }
             true
-        }
-    }
-
-
-    private fun setEventListeners() {
-        btnAddTodo = findViewById(R.id.btnAddTodo)
-        btnAddTodo.setOnClickListener {
-            val editText : EditText = findViewById<EditText>(R.id.editTextTodoTitle)
-            val todoTitle = editText.text.toString()
-            if (todoTitle.isNotEmpty()) {
-                val todo = Todo(todoTitle, "default description")
-                todoAdapter.addTodo(todo)
-                editText.text.clear()
-
-                // TODO: change with better persistence method
-                todos.add(todo)
-            }
-
-
         }
     }
 

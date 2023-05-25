@@ -13,10 +13,14 @@ import android.widget.CheckBox
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
 
 
 class TodoAdapter(
     private val todos: MutableList<Todo>,
+    private val todoIds: MutableList<String>,
     private val context: Context
 ) : RecyclerView.Adapter<TodoAdapter.TodoViewHolder>() {
 
@@ -72,7 +76,14 @@ class TodoAdapter(
         holder.checkboxDone.setOnCheckedChangeListener { _, _ ->
             toggleCheckboxColor(holder.checkboxDone)
             currentTodo.isDone = !currentTodo.isDone
+            val uid = FirebaseAuth.getInstance().currentUser!!.uid
+            val dbref = FirebaseDatabase
+                .getInstance("https://todolistapp-f8ef0-default-rtdb.europe-west1.firebasedatabase.app/")
+                .getReference("users/$uid/${todoIds[position]}/done")
+            dbref.setValue(currentTodo.isDone)
+
         }
+
         holder.shareButton.setOnClickListener {
             val textToShare = getTextToShare(holder)
             val intent = Intent(Intent.ACTION_SEND)
