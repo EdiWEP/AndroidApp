@@ -21,7 +21,6 @@ import java.util.*
 class TodoList : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
-    private lateinit var btnAddTodo: Button
     private lateinit var todoAdapter: TodoAdapter
     private lateinit var searchView: SearchView
 
@@ -54,7 +53,6 @@ class TodoList : Fragment() {
         recyclerView = initializeRecyclerView(view, displayedTodos)
 
         initializeSearchView(view, recyclerView)
-        setEventListeners(view)
 
         return view
     }
@@ -100,35 +98,13 @@ class TodoList : Fragment() {
         })
     }
 
-    private fun setEventListeners(view: View) {
-        btnAddTodo = view.findViewById(R.id.btnAddTodo)
-        btnAddTodo.setOnClickListener {
-            val editText : EditText = view.findViewById<EditText>(R.id.editTextTodoTitle)
-            val todoTitle = editText.text.toString()
-            if (todoTitle.isNotEmpty()) {
-                addTodo(todoTitle)
-                editText.text.clear()
-            }
-        }
-    }
-
-    private fun addTodo(title: String) {
-        // TODO: move this to different fragment
-        val uid = FirebaseAuth.getInstance().currentUser!!.uid
-        val todo = Todo(title)
-        val key = dbref.child(uid).push().key!!
-
-        var map = hashMapOf<String, Any>()
-        map[key] = todo
-        dbref.child(uid).updateChildren(map)
-    }
-
     private fun getTodos() {
 
         val uid = FirebaseAuth.getInstance().currentUser!!.uid
         dbref.child(uid).addValueEventListener(object: ValueEventListener{
             override fun onDataChange(snapshot: DataSnapshot) {
                 todos.clear()
+                todoIds.clear()
                 if (snapshot.exists()) {
                     for (todoSnapshot in snapshot.children) {
                         val todo = todoSnapshot.getValue(Todo::class.java)
@@ -137,7 +113,9 @@ class TodoList : Fragment() {
                     }
                     displayedTodos.clear()
                     displayedTodos.addAll(todos)
+
                     todoAdapter.notifyDataSetChanged()
+
                 }
             }
 

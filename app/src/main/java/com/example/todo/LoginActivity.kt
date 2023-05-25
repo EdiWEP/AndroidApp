@@ -65,22 +65,15 @@ class LoginActivity : AppCompatActivity() {
 
     private fun loginWithGoogle() {
         val signInIntent = googleSignInClient.signInIntent
-        println("launching")
         launcher.launch(signInIntent)
     }
 
     private val launcher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         result -> if (result.resultCode == Activity.RESULT_OK) {
-            println("result ok")
-            println(result.data)
             val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
             handleGoogleTaskResult(task)
         } else {
-            println("result not ok")
-            println(result.resultCode)
-            println(Activity.RESULT_OK)
-            println(Activity.RESULT_CANCELED)
-            println(Activity.RESULT_FIRST_USER)
+            Toast.makeText(this, "Google authentication error", Toast.LENGTH_SHORT).show()
         }
     }
 
