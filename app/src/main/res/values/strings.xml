@@ -3,4 +3,8 @@
     <string name="title_in_progress">Tasks In Progress</string>
     <string name="title_archived">Archived Tasks</string>
     <string name="title_add_task">Add a Task</string>
+    <string name="login">Login</string>
+    <string name="enter_your_email">Enter your email</string>
+    <string name="enter_your_password">Enter your password</string>
+    <string name="register">Register</string>
 </resources>
